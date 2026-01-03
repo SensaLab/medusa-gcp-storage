@@ -1,16 +1,16 @@
 {
-  "name": "@igorppbr/medusa-v2-gcp-file-provider",
+  "name": "@zosmaai/medusa-v2-gcp-file-provider",
   "version": "1.0.1",
   "description": "Google Cloud Storage integration for Medusa V2 to be used as a file provider.",
-  "author": "Igor Ludgero Miura <igorlmiura@gmail.com>",
+  "author": "SensaLab <info@sensalab.com>",
   "license": "MIT",
-  "homepage": "https://github.com/igorppbr/medusa-gcp-storage#readme",
+  "homepage": "https://github.com/SensaLab/medusa-gcp-storage#readme",
   "bugs": {
-    "url": "https://github.com/igorppbr/medusa-gcp-storage/issues"
+    "url": "https://github.com/SensaLab/medusa-gcp-storage/issues"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/igorppbr/medusa-gcp-storage.git"
+    "url": "git+https://github.com/SensaLab/medusa-gcp-storage.git"
   },
   "files": [
     ".medusa/server"
@@ -98,6 +98,5 @@
   },
   "dependencies": {
     "@google-cloud/storage": "^7.17.0"
-  },
-  "packageManager": "yarn@4.4.0+sha512.91d93b445d9284e7ed52931369bc89a663414e5582d00eea45c67ddc459a2582919eece27c412d6ffd1bd0793ff35399381cb229326b961798ce4f4cc60ddfdb"
+  }
 }

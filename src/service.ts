@@ -2,7 +2,6 @@ import { AbstractFileProviderService, MedusaError } from "@medusajs/framework/ut
 import { FileTypes, Logger, ProviderDeleteFileDTO, ProviderFileResultDTO, ProviderGetFileDTO, ProviderUploadFileDTO } from "@medusajs/framework/types"
 import { Readable } from "stream"
 import { Storage } from "@google-cloud/storage"
-import fs from "fs"
 
 type InjectedDependencies = {
   logger: Logger
@@ -216,15 +215,16 @@ class GoogleCloudFileProviderService extends AbstractFileProviderService {
         this.logger_.log(`Uploading file to GCS: ${file.filename}`);
       }
 
-      // 1. Save the file
-      const content = Buffer.from(file.content, "binary");
+      // 1. Decode base64 payload (strip data URI prefix if present)
+      const base64Payload = file.content.includes("base64,")
+        ? file.content.split("base64,")[1]
+        : file.content;
+      const content = Buffer.from(base64Payload, "base64");
 
-      // Create temporary local file from the buffer
-      const tempFilePath = `/tmp/${file.filename}`;
-      fs.writeFileSync(tempFilePath, content);
-
-      await this.storage_.bucket(this.options_.bucketName).upload(tempFilePath, {
-        destination: file.filename,
+      // 2. Save buffer directly to GCS with correct contentType
+      await gcsFile.save(content, {
+        resumable: false,
+        contentType: file.mimeType,
       });
 
       let url: string;

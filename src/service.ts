@@ -25,6 +25,7 @@ type Options = {
     serviceAccountKey: GoogleCloudServiceAccountKey
     preSignedUrlExpiry?: number // In minutes
     debug?: boolean
+    prefix?: string // Optional prefix for all file paths (e.g. "uploads/" or "medusa/files/")
 }
 
 /**
@@ -50,8 +51,24 @@ class GoogleCloudFileProviderService extends AbstractFileProviderService {
     this.logger_ = logger
     this.options_ = options
 
+    // Normalize prefix: ensure it ends with "/" if provided, or default to ""
+    if (this.options_.prefix) {
+      this.options_.prefix = this.options_.prefix.replace(/\/+$/, "") + "/"
+    }
+
     // Initialize Google Cloud Storage client
     this.storage_ = new Storage({ credentials: this.options_.serviceAccountKey })
+  }
+
+  /**
+   * Prepends the configured prefix to a filename.
+   * @param filename - The original filename
+   * @returns The prefixed file path
+   */
+  private withPrefix(filename: string): string {
+    return this.options_.prefix
+      ? `${this.options_.prefix}${filename}`
+      : filename
   }
 
   /**
@@ -208,11 +225,12 @@ class GoogleCloudFileProviderService extends AbstractFileProviderService {
     file: ProviderUploadFileDTO
   ): Promise<ProviderFileResultDTO> {
     const bucket = this.storage_.bucket(this.options_.bucketName);
-    const gcsFile = bucket.file(file.filename);
+    const fileKey = this.withPrefix(file.filename);
+    const gcsFile = bucket.file(fileKey);
 
     try {
       if (this.options_.debug) {
-        this.logger_.log(`Uploading file to GCS: ${file.filename}`);
+        this.logger_.log(`Uploading file to GCS: ${fileKey}`);
       }
 
       // 1. Decode base64 payload (strip data URI prefix if present)
@@ -236,14 +254,14 @@ class GoogleCloudFileProviderService extends AbstractFileProviderService {
 
       // 2b. Private file → issue a signed (presigned) URL
       } else {
-        url = await this.getPresignedDownloadUrl({ fileKey: file.filename });
+        url = await this.getPresignedDownloadUrl({ fileKey });
       }
 
       if (this.options_.debug) {
-        this.logger_.log(`Uploaded ${file.filename} → URL: ${url}`);
+        this.logger_.log(`Uploaded ${fileKey} → URL: ${url}`);
       }
 
-      return { url, key: file.filename };
+      return { url, key: fileKey };
 
     } catch (err) {
       this.logger_.error("Failed to upload to GCS", err);

@@ -26,6 +26,7 @@ type Options = {
     preSignedUrlExpiry?: number // In minutes
     debug?: boolean
     prefix?: string // Optional prefix for all file paths (e.g. "uploads/" or "medusa/files/")
+    baseUrl?: string // Optional base URL for public files (e.g. "https://cdn.example.com" or "https://storage.googleapis.com/my-bucket")
 }
 
 /**
@@ -54,6 +55,11 @@ class GoogleCloudFileProviderService extends AbstractFileProviderService {
     // Normalize prefix: ensure it ends with "/" if provided, or default to ""
     if (this.options_.prefix) {
       this.options_.prefix = this.options_.prefix.replace(/\/+$/, "") + "/"
+    }
+
+    // Normalize baseUrl: strip trailing slash if present
+    if (this.options_.baseUrl) {
+      this.options_.baseUrl = this.options_.baseUrl.replace(/\/+$/, "")
     }
 
     // Initialize Google Cloud Storage client
@@ -247,10 +253,13 @@ class GoogleCloudFileProviderService extends AbstractFileProviderService {
 
       let url: string;
 
-      // 2a. Public file → make it world-readable, then use `.publicUrl()`
+      // 2a. Public file → use baseUrl (CDN) if configured, otherwise default GCS public URL.
+      //     With uniform bucket-level access, public readability is controlled by the
+      //     bucket's IAM policy — we must NOT call makePublic() on individual objects.
       if (file.access === "public") {
-        await gcsFile.makePublic();
-        url = gcsFile.publicUrl();
+        url = this.options_.baseUrl
+          ? `${this.options_.baseUrl}/${fileKey}`
+          : gcsFile.publicUrl();
 
       // 2b. Private file → issue a signed (presigned) URL
       } else {

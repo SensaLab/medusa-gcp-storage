@@ -1,6 +1,6 @@
 {
   "name": "@zosmaai/medusa-v2-gcp-file-provider",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Google Cloud Storage integration for Medusa V2 to be used as a file provider.",
   "author": "SensaLab <info@sensalab.com>",
   "license": "MIT",

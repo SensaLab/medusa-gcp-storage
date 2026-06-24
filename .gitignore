@@ -27,3 +27,8 @@ build
 yarn.lock
 package-lock.json
 .yarnrc.yml
+
+# Allow pi/agent/wiki project folders
+!.pi/
+!.agents/
+!.llm-wiki/
